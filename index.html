@@ -126,6 +126,13 @@
   .verbintro .ex{margin-top:8px;font-size:14px;}
   .verbintro .ex .fr{font-style:italic;}
   .verbintro .ex .en{color:var(--ink-soft);}
+  .verbnote{background:var(--green-soft);border:1px solid var(--green);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px;line-height:1.5;}
+  .verbnote .vn-title{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-bottom:4px;}
+  .verbnote ul{margin:6px 0 6px 18px;padding:0;}
+  .verbnote li{margin-bottom:3px;}
+  .verbnote .vn-ex{font-style:italic;}
+  .verbnote .vn-en{font-style:normal;color:var(--ink-soft);}
+  .verbnote .vn-tip{margin-top:8px;padding-top:8px;border-top:1px dashed var(--green);}
   .tenseusage{background:var(--gold-soft);border:1px solid var(--gold);border-radius:12px;padding:12px 16px;margin-top:12px;margin-bottom:12px;font-size:13px;}
   .tenseusage .ex{margin-top:6px;font-style:italic;}
   .tenseusage .ex .en{display:block;font-style:normal;color:var(--ink-soft);}
@@ -202,6 +209,7 @@
       <button onclick="goToConjQuiz()">Quiz me</button>
     </div>
     <div id="verbIntroArea"></div>
+    <div id="verbNoteArea"></div>
     <div id="conjTableArea"></div>
     <div id="tenseUsageArea"></div>
     <p class="conjnote">Covers the eight tenses/moods used most in everyday Spanish speech and writing, deliberately leaving out literary-only forms (like the pretérito anterior or the future subjunctive). The pronunciation guide is a simplified respelling, not IPA: stressed syllables are shown in CAPS, "H" represents the throaty Spanish j/soft-g sound, and "NY" represents ñ.</p>
@@ -1138,7 +1146,7 @@ const PRONOUNS_ES = ["yo","tú","él / ella / usted","nosotros","vosotros","ello
 const IMP_PRONOUNS_ES = ["—","tú","usted","nosotros","vosotros","ustedes"];
 
 const CONJUGATIONS = {
-  "ser (irregular — to be)": {
+  "ser (irregular — to be: identity)": {
     "Presente": ["soy","eres","es","somos","sois","son"],
     "Pretérito indefinido": ["fui","fuiste","fue","fuimos","fuisteis","fueron"],
     "Pretérito imperfecto": ["era","eras","era","éramos","erais","eran"],
@@ -1148,7 +1156,7 @@ const CONJUGATIONS = {
     "Presente de subjuntivo": ["sea","seas","sea","seamos","seáis","sean"],
     "Imperativo": ["—","sé","sea","seamos","sed","sean"]
   },
-  "estar (irregular — to be)": {
+  "estar (irregular — to be: state & location)": {
     "Presente": ["estoy","estás","está","estamos","estáis","están"],
     "Pretérito indefinido": ["estuve","estuviste","estuvo","estuvimos","estuvisteis","estuvieron"],
     "Pretérito imperfecto": ["estaba","estabas","estaba","estábamos","estabais","estaban"],
@@ -1440,7 +1448,7 @@ const CONJUGATIONS = {
   }
 };
 const CONJ_CATEGORIES = {
-  "Core irregular verbs": ["ser (irregular — to be)","estar (irregular — to be)","haber (irregular — auxiliary \"to have\")","tener (irregular — to have)","ir (irregular — to go)","hacer (irregular — to do / make)","decir (irregular — to say / tell)","poder (irregular — to be able to)","querer (irregular — to want / love)","saber (irregular — to know)","poner (irregular — to put)","venir (irregular — to come)","salir (irregular — to leave / go out)","dar (irregular — to give)","ver (irregular — to see)"],
+  "Core irregular verbs": ["ser (irregular — to be: identity)","estar (irregular — to be: state & location)","haber (irregular — auxiliary \"to have\")","tener (irregular — to have)","ir (irregular — to go)","hacer (irregular — to do / make)","decir (irregular — to say / tell)","poder (irregular — to be able to)","querer (irregular — to want / love)","saber (irregular — to know)","poner (irregular — to put)","venir (irregular — to come)","salir (irregular — to leave / go out)","dar (irregular — to give)","ver (irregular — to see)"],
   "Regular -ar / -er / -ir verbs": ["hablar (-ar model — to speak)","comer (-er model — to eat)","vivir (-ir model — to live)"],
   "Stem-changing verbs": ["pensar (e→ie — to think)","volver (o→ue — to return)","pedir (e→i — to ask for)","dormir (o→ue/u — to sleep)","sentir (e→ie/i — to feel)","jugar (u→ue — to play)"],
   "Spelling-change verbs": ["buscar (-car, c→qu — to look for)","pagar (-gar, g→gu — to pay)","conocer (-zco — to know / meet)","leer (y-spelling — to read)"],
@@ -1809,13 +1817,25 @@ function renderConjTable(){
         <div class="inf">${currentVerb}</div>
         <div class="ex"><span class="fr">${info.fr}</span><br><span class="en">${info.en}</span></div>
       </div>`;
-  } else if(currentTense==='Impératif'){
+  } else if(currentTense==='Imperativo'){
     introEl.innerHTML = `
       <div class="verbintro">
         <div class="inf">${currentVerb}</div>
         <div class="ex" style="font-style:italic;color:var(--ink-soft);">This verb doesn't have an imperative form in Spanish.</div>
       </div>`;
   } else { introEl.innerHTML = ''; }
+
+  const noteEl = document.getElementById('verbNoteArea');
+  const vnote = VERB_NOTES[currentVerb.split(' (')[0]];
+  if(vnote){
+    noteEl.innerHTML = `
+      <div class="verbnote">
+        <div class="vn-title">${vnote.title}</div>
+        <div>${vnote.summary}</div>
+        <ul>${vnote.uses.map(u=>`<li><strong>${u[0]}</strong> — <span class="vn-ex">${u[1]}</span> <span class="vn-en">(${u[2]})</span></li>`).join('')}</ul>
+        <div class="vn-tip">${vnote.tip}</div>
+      </div>`;
+  } else { noteEl.innerHTML = ''; }
 
   const usage = TENSE_USAGE[currentTense];
   const usageEl = document.getElementById('tenseUsageArea');
@@ -1828,7 +1848,7 @@ function renderConjTable(){
   } else { usageEl.innerHTML = ''; }
 
   const forms = CONJUGATIONS[currentVerb][currentTense];
-  const prons = currentTense==='Impératif' ? IMP_PRONOUNS : PRONOUNS;
+  const prons = currentTense==='Imperativo' ? IMP_PRONOUNS : PRONOUNS;
   const area = document.getElementById('conjTableArea');
   let rows = '';
   forms.forEach((f,i)=>{
@@ -1897,7 +1917,7 @@ const VERB_PATTERNS = {
   "acostarse": "reflexive, o→ue stem change"
 };
 const VERB_EXAMPLES = {
-  "ser (irregular — to be)": {
+  "ser (irregular — to be: identity)": {
     "Presente": {"fr":"Yo soy de México.","en":"I am from Mexico."},
     "Pretérito indefinido": {"fr":"Ella fue mi profesora el año pasado.","en":"She was my teacher last year."},
     "Pretérito imperfecto": {"fr":"De niño, yo era muy tímido.","en":"As a child, I was very shy."},
@@ -1907,7 +1927,7 @@ const VERB_EXAMPLES = {
     "Presente de subjuntivo": {"fr":"Espero que seas feliz.","en":"I hope that you are happy."},
     "Imperativo": {"fr":"Sé paciente, por favor.","en":"Be patient, please."}
   },
-  "estar (irregular — to be)": {
+  "estar (irregular — to be: state & location)": {
     "Presente": {"fr":"Estoy muy cansado hoy.","en":"I am very tired today."},
     "Pretérito indefinido": {"fr":"Estuvimos en la playa todo el día.","en":"We were at the beach all day."},
     "Pretérito imperfecto": {"fr":"Estaba lloviendo cuando salí.","en":"It was raining when I left."},
@@ -2207,6 +2227,35 @@ const TENSE_USAGE = {
   "Imperativo": {"note":"Gives direct commands or instructions; affirmative forms differ from negative ones, and this app shows only the affirmative.","fr":"Cierra la puerta y siéntate, por favor.","en":"Close the door and sit down, please."}
 };
 
+// Short explanatory notes shown on a verb's conjugation page (keyed by bare infinitive).
+const VERB_NOTES = {
+  "ser": {
+    title: "Ser vs. estar — both mean “to be”",
+    summary: "<strong>Ser</strong> describes what someone or something <em>is</em>: identity and lasting, defining qualities.",
+    uses: [
+      ["Identity &amp; profession", "Ella es médica.", "She is a doctor"],
+      ["Origin &amp; nationality", "Somos de Chile.", "We are from Chile"],
+      ["Characteristics", "El cielo es azul.", "The sky is blue"],
+      ["Time, dates &amp; days", "Son las tres.", "It is three o’clock"],
+      ["Possession &amp; material", "La mesa es de madera.", "The table is made of wood"]
+    ],
+    tip: "<strong>Memory aid (DOCTOR):</strong> Description, Occupation, Characteristic, Time, Origin, Relationship. <strong>Compare:</strong> <span class=\"vn-ex\">Es aburrido</span> = he is boring (his nature), but <span class=\"vn-ex\">Está aburrido</span> = he is bored (right now)."
+  },
+  "estar": {
+    title: "Ser vs. estar — both mean “to be”",
+    summary: "<strong>Estar</strong> describes how someone or something <em>is right now</em>: where it is, and its state or condition.",
+    uses: [
+      ["Location", "El libro está en la mesa.", "The book is on the table"],
+      ["Physical condition", "Estoy cansado.", "I am tired"],
+      ["Emotions &amp; moods", "Ellos están contentos.", "They are happy"],
+      ["Results of a change", "La puerta está abierta.", "The door is open"],
+      ["Actions in progress", "Estamos comiendo.", "We are eating"]
+    ],
+    tip: "<strong>Memory aid (PLACE):</strong> Position, Location, Action, Condition, Emotion. <strong>Compare:</strong> <span class=\"vn-ex\">Es listo</span> = he is clever, but <span class=\"vn-ex\">Está listo</span> = he is ready. (Even a permanent location uses <em>estar</em>: <span class=\"vn-ex\">Madrid está en España</span>.)"
+  }
+};
+
+
 function startConjQuiz(){
   toggleConjQuiz(true);
   // Build a pool of {fr, en, sub} where fr = the pronoun (main prompt) and sub = the
@@ -2268,7 +2317,7 @@ function poolForCtx(ctx){
     const [v,t] = ctx.key.split('|');
     if(CONJUGATIONS[v] && CONJUGATIONS[v][t]){
       let pool = CONJUGATIONS[v][t].filter(f=>f!=='—').map(f=>({en:f}));
-      // Some tenses (Impératif especially) only have 2-3 forms for a single verb, not
+      // Some tenses (Imperativo especially) only have 2-3 forms for a single verb, not
       // enough for 3 good distractors. Top up with the SAME tense from other verbs, so
       // wrong answers are still grammatically plausible (other imperatives, not a
       // random different tense) rather than falling back to the whole mixed session pool.
